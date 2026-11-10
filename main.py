@@ -1,5 +1,5 @@
 import os
-import requests
+import httpx
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 
@@ -7,11 +7,10 @@ app = FastAPI()
 
 # 1. Point to the free cloud endpoint for TinyLlama
 API_URL = "https://huggingface.co"
-# Render will securely inject your Hugging Face API key here
 HF_TOKEN = os.getenv("HF_TOKEN")
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
-# 2. The HTML code for a beautiful, responsive dark-mode chat interface
+# 2. Responsive dark-mode HTML template
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -49,7 +48,6 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Store current session chat history globally
 history = []
 
 @app.get("/", response_class=HTMLResponse)
@@ -58,22 +56,25 @@ async def home():
 
 @app.post("/chat", response_class=HTMLResponse)
 async def chat(message: str = Form(...)):
-    # Format chat history context structure for the model template
     prompt = f"<|system|>\nYou are LukeGPT, a highly intelligent and friendly AI assistant built by Luke.</s>\n<|user|>\n{message}</s>\n<|assistant|>\n"
-    
-    # Send the lightweight payload to the Hugging Face API
     payload = {"inputs": prompt, "parameters": {"max_new_tokens": 150, "temperature": 0.7}}
-    response = requests.post(API_URL, headers=headers, json=payload)
     
-    try:
-        result = response.json()
-        raw_output = result['generated_text']
-        # Isolate the newly generated response text cleanly
-        ai_response = raw_output[len(prompt):].strip()
-    except Exception:
-        ai_response = "LukeGPT is waking up or processing. Please try submitting your message again in a few seconds!"
+    # Use httpx.AsyncClient to execute a non-blocking network fetch call safely
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(API_URL, headers=headers, json=payload, timeout=60.0)
+            result = response.json()
+            
+            # Check if Hugging Face model is still initializing on their free tier servers
+            if isinstance(result, dict) and "estimated_time" in result:
+                ai_response = "LukeGPT's cloud brain is warming up on Hugging Face right now. Please resend this message in 10-15 seconds!"
+            else:
+                raw_output = result[0]['generated_text'] if isinstance(result, list) else result['generated_text']
+                ai_response = raw_output[len(prompt):].strip()
+        except Exception as e:
+            ai_response = "Connection timeout or model loading. Please wait a quick moment and try typing your question again!"
 
-    # Append new conversation turn to history display blocks
+    # Append to visual layout block structure
     history.append(f'<div class="box user-box"><strong>You:</strong> {message}</div>')
     history.append(f'<div class="box ai-box"><strong>LukeGPT:</strong> {ai_response}</div>')
     
