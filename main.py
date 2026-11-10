@@ -49,15 +49,15 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Store current session chat history globally for simplification
+# Store current session chat history globally
 history = []
 
 @app.get("/", response_class=HTMLResponse)
-def home():
+async def home():
     return HTML_TEMPLATE.format(chat_history="<p style='text-align:center;color:#666;'>Start a conversation above!</p>")
 
 @app.post("/chat", response_class=HTMLResponse)
-def chat(message: str = Form(...)):
+async def chat(message: str = Form(...)):
     # Format chat history context structure for the model template
     prompt = f"<|system|>\nYou are LukeGPT, a highly intelligent and friendly AI assistant built by Luke.</s>\n<|user|>\n{message}</s>\n<|assistant|>\n"
     
@@ -67,7 +67,7 @@ def chat(message: str = Form(...)):
     
     try:
         result = response.json()
-        raw_output = result[0]['generated_text']
+        raw_output = result['generated_text']
         # Isolate the newly generated response text cleanly
         ai_response = raw_output[len(prompt):].strip()
     except Exception:
