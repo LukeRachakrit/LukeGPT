@@ -28,7 +28,7 @@ if prompt := st.chat_input("Ask LukeGPT anything..."):
         with st.spinner("Thinking..."):
             try:
                 response = client.chat_completion(
-                    model="Qwen/Qwen2.5-7B-Instruct",
+                    model="meta-llama/Llama-3.2-3B-Instruct",
                     messages=st.session_state.messages,
                     max_tokens=250
                 )
