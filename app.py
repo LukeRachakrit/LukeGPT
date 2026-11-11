@@ -33,7 +33,7 @@ if prompt := st.chat_input("Ask LukeGPT anything..."):
         with st.spinner("Thinking..."):
             try:
                 response = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
+                   model="openai/gpt-oss-20b",
                     messages=st.session_state.messages,
                     max_tokens=500
                 )
