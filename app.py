@@ -9,19 +9,16 @@ st.caption("Custom AI Assistant built by Luke")
 # Connect to Hugging Face using your secret token
 client = InferenceClient(token=os.getenv("HF_TOKEN"))
 
-# Set up chat memory so the webpage displays your conversation
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": "You are LukeGPT, a helpful and intelligent AI assistant built by Luke."}
     ]
 
-# Show past messages on screen
 for msg in st.session_state.messages:
     if msg["role"] != "system":
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-# Chat input box at the bottom
 if prompt := st.chat_input("Ask LukeGPT anything..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -31,13 +28,13 @@ if prompt := st.chat_input("Ask LukeGPT anything..."):
         with st.spinner("Thinking..."):
             try:
                 response = client.chat_completion(
-                    model="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+                    model="Qwen/Qwen2.5-7B-Instruct",
                     messages=st.session_state.messages,
-                    max_tokens=200
+                    max_tokens=250
                 )
                 reply = response.choices[0].message.content
-            except Exception:
-                reply = "LukeGPT is waking up on the cloud server. Please try sending your message again in 10 seconds!"
+            except Exception as e:
+                reply = f"Error details: {e}"
             
             st.markdown(reply)
             st.session_state.messages.append({"role": "assistant", "content": reply})
