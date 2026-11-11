@@ -28,10 +28,11 @@ if prompt := st.chat_input("Ask LukeGPT anything..."):
         with st.spinner("Thinking..."):
             try:
                 response = client.chat_completion(
-                    model="meta-llama/Llama-3.2-3B-Instruct",
-                    messages=st.session_state.messages,
-                    max_tokens=250
-                )
+    model="llama-3.1-8b-instant",
+    provider="groq",
+    messages=st.session_state.messages,
+    max_tokens=250
+)
                 reply = response.choices[0].message.content
             except Exception as e:
                 reply = f"Error details: {e}"
